@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: var(--theme-canvas);
+  --color-yaml-bg: var(--theme-yaml-bg);
+  --color-card-bg: var(--theme-card-bg);
+  --color-card-border: var(--theme-card-border);
+  --color-arrow-allow: var(--theme-arrow-allow);
+  --color-arrow-deny: var(--theme-arrow-deny);
+  --color-accent: var(--theme-accent);
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-surface: var(--theme-surface);
+  --color-divider: var(--theme-divider);
+  --color-glow: var(--theme-glow);
+  --color-yaml-text: var(--theme-yaml-text);
+  --color-yaml-line-num: var(--theme-yaml-line-num);
+  --color-tab-active: var(--theme-tab-active);
+  --color-tab-inactive: var(--theme-tab-inactive);
+  --color-action-text: var(--theme-action-text);
+  --color-badge-allow-bg: var(--theme-badge-allow-bg);
+  --color-badge-allow-border: var(--theme-badge-allow-border);
+  --color-badge-deny-bg: var(--theme-badge-deny-bg);
+  --color-badge-deny-border: var(--theme-badge-deny-border);
+  --color-rating-1: var(--theme-rating-1);
+  --color-rating-2: var(--theme-rating-2);
+  --color-rating-3: var(--theme-rating-3);
+  --color-rating-4: var(--theme-rating-4);
+  --color-rating-inactive: var(--theme-rating-inactive);
+  --color-input-bg: var(--theme-input-bg);
+  --color-input-border: var(--theme-input-border);
+  --color-input-text: var(--theme-input-text);
+}
+
+/* Dark synthwave with cyan accent for RBAC */
+:root,
+[data-theme="dark"] {
+  --theme-canvas: #0d0221;
+  --theme-yaml-bg: #0a0118;
+  --theme-card-bg: rgba(26, 26, 46, 0.9);
+  --theme-card-border: rgba(0, 229, 255, 0.3);
+  --theme-arrow-allow: #39ff14;
+  --theme-arrow-deny: #ff2975;
+  --theme-accent: #00e5ff;
+  --theme-text-primary: #d0eaff;
+  --theme-text-secondary: #7b9caa;
+  --theme-surface: #14172e;
+  --theme-divider: rgba(0, 229, 255, 0.25);
+  --theme-glow: rgba(0, 229, 255, 0.15);
+  --theme-yaml-text: #b5cad9;
+  --theme-yaml-line-num: #4a6a7a;
+  --theme-tab-active: #d0eaff;
+  --theme-tab-inactive: #7b9caa;
+  --theme-action-text: #7b9caa;
+  --theme-badge-allow-bg: rgba(57, 255, 20, 0.1);
+  --theme-badge-allow-border: rgba(57, 255, 20, 0.3);
+  --theme-badge-deny-bg: rgba(255, 41, 117, 0.1);
+  --theme-badge-deny-border: rgba(255, 41, 117, 0.3);
+  --theme-rating-1: #ff2975;
+  --theme-rating-2: #ff6b35;
+  --theme-rating-3: #ffd700;
+  --theme-rating-4: #39ff14;
+  --theme-rating-inactive: #1a2a3e;
+  --theme-input-bg: #14172e;
+  --theme-input-border: rgba(0, 229, 255, 0.25);
+  --theme-input-text: #d0eaff;
+}
+
+[data-theme="light"] {
+  --theme-canvas: #e6f7ff;
+  --theme-yaml-bg: #1b2d4e;
+  --theme-card-bg: #ffffff;
+  --theme-card-border: #b8e0ff;
+  --theme-arrow-allow: #16a34a;
+  --theme-arrow-deny: #dc2626;
+  --theme-accent: #0284c7;
+  --theme-text-primary: #0c2540;
+  --theme-text-secondary: #5b7a8a;
+  --theme-surface: #e4f0ff;
+  --theme-divider: #b5d9d9;
+  --theme-glow: rgba(2, 132, 199, 0.08);
+  --theme-yaml-text: #c8e0e8;
+  --theme-yaml-line-num: #6a8a9a;
+  --theme-tab-active: #0c2540;
+  --theme-tab-inactive: #8baaba;
+  --theme-action-text: #5b7a8a;
+  --theme-badge-allow-bg: #dcfce7;
+  --theme-badge-allow-border: #bbf7d0;
+  --theme-badge-deny-bg: #fef2f2;
+  --theme-badge-deny-border: #fecaca;
+  --theme-rating-1: #dc2626;
+  --theme-rating-2: #ea580c;
+  --theme-rating-3: #ca8a04;
+  --theme-rating-4: #16a34a;
+  --theme-rating-inactive: #b5d9d9;
+  --theme-input-bg: #f4faff;
+  --theme-input-border: #b8e0ff;
+  --theme-input-text: #0c2540;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+input, textarea, select {
+  color: var(--theme-input-text);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--theme-text-secondary);
+  opacity: 1;
+}
+
+select option {
+  color: var(--theme-text-primary);
+  background: var(--theme-surface);
+}
+
+[data-theme="dark"] .glow-card,
+:root:not([data-theme="light"]) .glow-card {
+  box-shadow: 0 0 15px var(--theme-glow), 0 0 30px rgba(0, 229, 255, 0.05);
+  transition: box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .glow-card:hover,
+:root:not([data-theme="light"]) .glow-card:hover {
+  box-shadow: 0 0 20px var(--theme-glow), 0 0 40px rgba(0, 229, 255, 0.1);
+}
+
+/* reactflow theming overrides */
+.react-flow__node {
+  font-family: inherit;
+}
+
+.react-flow__edge-path {
+  stroke: var(--theme-accent);
+  stroke-width: 1.5;
+  opacity: 0.6;
+}
+
+.react-flow__controls,
+.react-flow__minimap {
+  background: var(--theme-surface) !important;
+  border: 1px solid var(--theme-divider) !important;
+}
+
+.react-flow__controls-button {
+  background: var(--theme-surface) !important;
+  border-bottom: 1px solid var(--theme-divider) !important;
+  color: var(--theme-text-primary) !important;
+}
+
+.react-flow__attribution {
+  background: transparent !important;
+  color: var(--theme-text-secondary) !important;
+  opacity: 0.6;
+}
+
+.react-flow__background {
+  background: var(--theme-canvas);
+}
+
+/* table styling */
+table.rbac-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.rbac-table th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--theme-text-secondary);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--theme-divider);
+  background: var(--theme-surface);
+}
+table.rbac-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--theme-divider);
+  color: var(--theme-text-primary);
+  font-size: 0.875rem;
+  vertical-align: top;
+}
+table.rbac-table tr:hover td {
+  background: var(--theme-glow);
+}
