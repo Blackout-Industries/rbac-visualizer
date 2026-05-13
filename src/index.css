@@ -32,70 +32,205 @@
   --color-input-text: var(--theme-input-text);
 }
 
-/* Dark synthwave with cyan accent for RBAC */
+/* Catppuccin Mocha (dark, default) */
 :root,
+[data-theme="mocha"],
 [data-theme="dark"] {
-  --theme-canvas: #0d0221;
-  --theme-yaml-bg: #0a0118;
-  --theme-card-bg: rgba(26, 26, 46, 0.9);
-  --theme-card-border: rgba(0, 229, 255, 0.3);
-  --theme-arrow-allow: #39ff14;
-  --theme-arrow-deny: #ff2975;
-  --theme-accent: #00e5ff;
-  --theme-text-primary: #d0eaff;
-  --theme-text-secondary: #7b9caa;
-  --theme-surface: #14172e;
-  --theme-divider: rgba(0, 229, 255, 0.25);
-  --theme-glow: rgba(0, 229, 255, 0.15);
-  --theme-yaml-text: #b5cad9;
-  --theme-yaml-line-num: #4a6a7a;
-  --theme-tab-active: #d0eaff;
-  --theme-tab-inactive: #7b9caa;
-  --theme-action-text: #7b9caa;
-  --theme-badge-allow-bg: rgba(57, 255, 20, 0.1);
-  --theme-badge-allow-border: rgba(57, 255, 20, 0.3);
-  --theme-badge-deny-bg: rgba(255, 41, 117, 0.1);
-  --theme-badge-deny-border: rgba(255, 41, 117, 0.3);
-  --theme-rating-1: #ff2975;
-  --theme-rating-2: #ff6b35;
-  --theme-rating-3: #ffd700;
-  --theme-rating-4: #39ff14;
-  --theme-rating-inactive: #1a2a3e;
-  --theme-input-bg: #14172e;
-  --theme-input-border: rgba(0, 229, 255, 0.25);
-  --theme-input-text: #d0eaff;
+  --theme-canvas: #1e1e2e;
+  --theme-yaml-bg: #181825;
+  --theme-card-bg: #313244;
+  --theme-card-border: #45475a;
+  --theme-arrow-allow: #a6e3a1;
+  --theme-arrow-deny: #f38ba8;
+  --theme-accent: #cba6f7;
+  --theme-text-primary: #cdd6f4;
+  --theme-text-secondary: #bac2de;
+  --theme-surface: #313244;
+  --theme-divider: #45475a;
+  --theme-glow: rgba(203, 166, 247, 0.12);
+  --theme-yaml-text: #cdd6f4;
+  --theme-yaml-line-num: #6c7086;
+  --theme-tab-active: #cdd6f4;
+  --theme-tab-inactive: #6c7086;
+  --theme-action-text: #bac2de;
+  --theme-badge-allow-bg: rgba(166, 227, 161, 0.12);
+  --theme-badge-allow-border: rgba(166, 227, 161, 0.45);
+  --theme-badge-deny-bg: rgba(243, 139, 168, 0.12);
+  --theme-badge-deny-border: rgba(243, 139, 168, 0.45);
+  --theme-rating-1: #f38ba8;
+  --theme-rating-2: #fab387;
+  --theme-rating-3: #f9e2af;
+  --theme-rating-4: #a6e3a1;
+  --theme-rating-inactive: #585b70;
+  --theme-input-bg: #313244;
+  --theme-input-border: #45475a;
+  --theme-input-text: #cdd6f4;
 }
 
+/* Catppuccin Latte (light) */
+[data-theme="latte"],
 [data-theme="light"] {
-  --theme-canvas: #e6f7ff;
-  --theme-yaml-bg: #1b2d4e;
-  --theme-card-bg: #ffffff;
-  --theme-card-border: #b8e0ff;
-  --theme-arrow-allow: #16a34a;
-  --theme-arrow-deny: #dc2626;
-  --theme-accent: #0284c7;
-  --theme-text-primary: #0c2540;
-  --theme-text-secondary: #5b7a8a;
-  --theme-surface: #e4f0ff;
-  --theme-divider: #b5d9d9;
-  --theme-glow: rgba(2, 132, 199, 0.08);
-  --theme-yaml-text: #c8e0e8;
-  --theme-yaml-line-num: #6a8a9a;
-  --theme-tab-active: #0c2540;
-  --theme-tab-inactive: #8baaba;
-  --theme-action-text: #5b7a8a;
-  --theme-badge-allow-bg: #dcfce7;
-  --theme-badge-allow-border: #bbf7d0;
-  --theme-badge-deny-bg: #fef2f2;
-  --theme-badge-deny-border: #fecaca;
-  --theme-rating-1: #dc2626;
-  --theme-rating-2: #ea580c;
-  --theme-rating-3: #ca8a04;
-  --theme-rating-4: #16a34a;
-  --theme-rating-inactive: #b5d9d9;
-  --theme-input-bg: #f4faff;
-  --theme-input-border: #b8e0ff;
-  --theme-input-text: #0c2540;
+  --theme-canvas: #eff1f5;
+  --theme-yaml-bg: #e6e9ef;
+  --theme-card-bg: #ccd0da;
+  --theme-card-border: #bcc0cc;
+  --theme-arrow-allow: #40a02b;
+  --theme-arrow-deny: #d20f39;
+  --theme-accent: #8839ef;
+  --theme-text-primary: #4c4f69;
+  --theme-text-secondary: #5c5f77;
+  --theme-surface: #ccd0da;
+  --theme-divider: #bcc0cc;
+  --theme-glow: rgba(136, 57, 239, 0.08);
+  --theme-yaml-text: #4c4f69;
+  --theme-yaml-line-num: #9ca0b0;
+  --theme-tab-active: #4c4f69;
+  --theme-tab-inactive: #9ca0b0;
+  --theme-action-text: #5c5f77;
+  --theme-badge-allow-bg: rgba(64, 160, 43, 0.10);
+  --theme-badge-allow-border: rgba(64, 160, 43, 0.35);
+  --theme-badge-deny-bg: rgba(210, 15, 57, 0.10);
+  --theme-badge-deny-border: rgba(210, 15, 57, 0.35);
+  --theme-rating-1: #d20f39;
+  --theme-rating-2: #fe640b;
+  --theme-rating-3: #df8e1d;
+  --theme-rating-4: #40a02b;
+  --theme-rating-inactive: #acb0be;
+  --theme-input-bg: #ccd0da;
+  --theme-input-border: #bcc0cc;
+  --theme-input-text: #4c4f69;
+}
+
+/* Ayu Dark */
+[data-theme="ayu-dark"] {
+  --theme-canvas: #0f1419;
+  --theme-yaml-bg: #0b0e14;
+  --theme-card-bg: #14191f;
+  --theme-card-border: #253340;
+  --theme-arrow-allow: #aad94c;
+  --theme-arrow-deny: #f07178;
+  --theme-accent: #ffb454;
+  --theme-text-primary: #bfbdb6;
+  --theme-text-secondary: #98a2b3;
+  --theme-surface: #14191f;
+  --theme-divider: #253340;
+  --theme-glow: rgba(255, 180, 84, 0.16);
+  --theme-yaml-text: #bfbdb6;
+  --theme-yaml-line-num: #5c6773;
+  --theme-tab-active: #bfbdb6;
+  --theme-tab-inactive: #5c6773;
+  --theme-action-text: #98a2b3;
+  --theme-badge-allow-bg: rgba(170, 217, 76, 0.12);
+  --theme-badge-allow-border: rgba(170, 217, 76, 0.45);
+  --theme-badge-deny-bg: rgba(240, 113, 120, 0.12);
+  --theme-badge-deny-border: rgba(240, 113, 120, 0.45);
+  --theme-rating-1: #f07178;
+  --theme-rating-2: #ff8f40;
+  --theme-rating-3: #ffb454;
+  --theme-rating-4: #aad94c;
+  --theme-rating-inactive: #3a4451;
+  --theme-input-bg: #14191f;
+  --theme-input-border: #253340;
+  --theme-input-text: #bfbdb6;
+}
+
+/* Gruvbox Dark */
+[data-theme="gruvbox-dark"] {
+  --theme-canvas: #282828;
+  --theme-yaml-bg: #1d2021;
+  --theme-card-bg: #32302f;
+  --theme-card-border: #504945;
+  --theme-arrow-allow: #b8bb26;
+  --theme-arrow-deny: #fb4934;
+  --theme-accent: #fabd2f;
+  --theme-text-primary: #ebdbb2;
+  --theme-text-secondary: #d5c4a1;
+  --theme-surface: #32302f;
+  --theme-divider: #504945;
+  --theme-glow: rgba(250, 189, 47, 0.16);
+  --theme-yaml-text: #ebdbb2;
+  --theme-yaml-line-num: #7c6f64;
+  --theme-tab-active: #ebdbb2;
+  --theme-tab-inactive: #7c6f64;
+  --theme-action-text: #d5c4a1;
+  --theme-badge-allow-bg: rgba(184, 187, 38, 0.14);
+  --theme-badge-allow-border: rgba(184, 187, 38, 0.45);
+  --theme-badge-deny-bg: rgba(251, 73, 52, 0.14);
+  --theme-badge-deny-border: rgba(251, 73, 52, 0.45);
+  --theme-rating-1: #fb4934;
+  --theme-rating-2: #fe8019;
+  --theme-rating-3: #fabd2f;
+  --theme-rating-4: #b8bb26;
+  --theme-rating-inactive: #504945;
+  --theme-input-bg: #32302f;
+  --theme-input-border: #504945;
+  --theme-input-text: #ebdbb2;
+}
+
+/* Nord */
+[data-theme="nord"] {
+  --theme-canvas: #2e3440;
+  --theme-yaml-bg: #242933;
+  --theme-card-bg: #3b4252;
+  --theme-card-border: #4c566a;
+  --theme-arrow-allow: #a3be8c;
+  --theme-arrow-deny: #bf616a;
+  --theme-accent: #88c0d0;
+  --theme-text-primary: #eceff4;
+  --theme-text-secondary: #d8dee9;
+  --theme-surface: #3b4252;
+  --theme-divider: #4c566a;
+  --theme-glow: rgba(136, 192, 208, 0.16);
+  --theme-yaml-text: #eceff4;
+  --theme-yaml-line-num: #6e7686;
+  --theme-tab-active: #eceff4;
+  --theme-tab-inactive: #6e7686;
+  --theme-action-text: #d8dee9;
+  --theme-badge-allow-bg: rgba(163, 190, 140, 0.14);
+  --theme-badge-allow-border: rgba(163, 190, 140, 0.45);
+  --theme-badge-deny-bg: rgba(191, 97, 106, 0.14);
+  --theme-badge-deny-border: rgba(191, 97, 106, 0.45);
+  --theme-rating-1: #bf616a;
+  --theme-rating-2: #d08770;
+  --theme-rating-3: #ebcb8b;
+  --theme-rating-4: #a3be8c;
+  --theme-rating-inactive: #4c566a;
+  --theme-input-bg: #3b4252;
+  --theme-input-border: #4c566a;
+  --theme-input-text: #eceff4;
+}
+
+/* Half-Life */
+[data-theme="half-life"] {
+  --theme-canvas: #0a0a0a;
+  --theme-yaml-bg: #050505;
+  --theme-card-bg: #141414;
+  --theme-card-border: #2a2a2a;
+  --theme-arrow-allow: #7ad97a;
+  --theme-arrow-deny: #ff4b3a;
+  --theme-accent: #ff6a00;
+  --theme-text-primary: #d6d6d6;
+  --theme-text-secondary: #a8a8a8;
+  --theme-surface: #1a1a1a;
+  --theme-divider: #2a2a2a;
+  --theme-glow: rgba(255, 106, 0, 0.20);
+  --theme-yaml-text: #d6d6d6;
+  --theme-yaml-line-num: #6b6b6b;
+  --theme-tab-active: #ff6a00;
+  --theme-tab-inactive: #6b6b6b;
+  --theme-action-text: #a8a8a8;
+  --theme-badge-allow-bg: rgba(122, 217, 122, 0.12);
+  --theme-badge-allow-border: rgba(122, 217, 122, 0.45);
+  --theme-badge-deny-bg: rgba(255, 75, 58, 0.14);
+  --theme-badge-deny-border: rgba(255, 75, 58, 0.45);
+  --theme-rating-1: #ff4b3a;
+  --theme-rating-2: #ff8c1a;
+  --theme-rating-3: #ffb347;
+  --theme-rating-4: #7ad97a;
+  --theme-rating-inactive: #2a2a2a;
+  --theme-input-bg: #141414;
+  --theme-input-border: #2a2a2a;
+  --theme-input-text: #d6d6d6;
 }
 
 html, body, #root {
@@ -119,15 +254,23 @@ select option {
   background: var(--theme-surface);
 }
 
-[data-theme="dark"] .glow-card,
-:root:not([data-theme="light"]) .glow-card {
-  box-shadow: 0 0 15px var(--theme-glow), 0 0 30px rgba(0, 229, 255, 0.05);
+.glow-card {
+  box-shadow: 0 0 0 1px var(--theme-card-border), 0 0 4px var(--theme-glow);
   transition: box-shadow 0.2s ease;
 }
 
-[data-theme="dark"] .glow-card:hover,
-:root:not([data-theme="light"]) .glow-card:hover {
-  box-shadow: 0 0 20px var(--theme-glow), 0 0 40px rgba(0, 229, 255, 0.1);
+.glow-card:hover {
+  box-shadow: 0 0 0 1px var(--theme-card-border), 0 0 6px var(--theme-glow);
+}
+
+[data-theme="latte"] .glow-card,
+[data-theme="light"] .glow-card {
+  box-shadow: 0 0 0 1px var(--theme-card-border);
+}
+
+[data-theme="latte"] .glow-card:hover,
+[data-theme="light"] .glow-card:hover {
+  box-shadow: 0 0 0 1px var(--theme-card-border);
 }
 
 /* reactflow theming overrides */
