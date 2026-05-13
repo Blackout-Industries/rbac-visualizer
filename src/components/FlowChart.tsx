@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -127,28 +127,72 @@ export function FlowChart() {
     return flow.chains.get(driverId) ?? null;
   }, [flow, focusedNodeId, hoveredNodeId]);
 
+  // Identity-preserving node + edge builders. Hover flicker was caused by
+  // every render emitting a fresh `data` object for every node — even if
+  // dim/selected didn't change for that specific node. React.memo on the
+  // node components can't help if their props always look new. We cache the
+  // previous RfNode per id and reuse it verbatim when dim/selected/pos
+  // haven't changed. Same trick for edges.
+  const prevNodesRef = useRef<Map<string, RfNode>>(new Map());
+  const prevEdgesRef = useRef<Map<string, Edge>>(new Map());
+
   const rfNodes = useMemo<RfNode[]>(() => {
     if (!flow || !graph || !layout) return [];
+    const next = new Map<string, RfNode>();
     const out: RfNode[] = [];
     for (const node of flow.nodes) {
       const pos = layout.positions.get(node.id) ?? { x: 0, y: 0 };
       const dim = activeIds !== null && !activeIds.has(node.id);
       const selected = focusedNodeId === node.id;
+      const prev = prevNodesRef.current.get(node.id);
+      const prevData = prev?.data as
+        | { dim?: boolean; selected?: boolean }
+        | undefined;
+      if (
+        prev &&
+        prev.position.x === pos.x &&
+        prev.position.y === pos.y &&
+        prevData?.dim === dim &&
+        prevData?.selected === selected
+      ) {
+        next.set(node.id, prev);
+        out.push(prev);
+        continue;
+      }
       const data = buildNodeData(node, graph, dim, selected);
       if (!data) continue;
-      out.push({
-        id: node.id,
-        type: node.layer,
-        position: pos,
-        data,
-      });
+      const rf: RfNode = { id: node.id, type: node.layer, position: pos, data };
+      next.set(node.id, rf);
+      out.push(rf);
     }
+    prevNodesRef.current = next;
     return out;
   }, [flow, graph, layout, activeIds, focusedNodeId]);
 
   const rfEdges = useMemo<Edge[]>(() => {
     if (!flow) return [];
-    return flow.edges.map(e => toRfEdge(e, activeIds));
+    const next = new Map<string, Edge>();
+    const out: Edge[] = [];
+    for (const e of flow.edges) {
+      const active = activeIds === null
+        ? true
+        : activeIds.has(e.source) && activeIds.has(e.target);
+      const prev = prevEdgesRef.current.get(e.id);
+      // Edge identity is stable if (active state, source, target) all match.
+      // Encode active state on the edge as a custom field for the comparison.
+      const prevActive = (prev as Edge & { _active?: boolean } | undefined)?._active;
+      if (prev && prevActive === active) {
+        next.set(e.id, prev);
+        out.push(prev);
+        continue;
+      }
+      const rf = toRfEdge(e, activeIds);
+      (rf as Edge & { _active: boolean })._active = active;
+      next.set(e.id, rf);
+      out.push(rf);
+    }
+    prevEdgesRef.current = next;
+    return out;
   }, [flow, activeIds]);
 
   const handleNodeMouseEnter: NodeMouseHandler = useCallback((_, node) => {

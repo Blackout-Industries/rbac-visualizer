@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { User, Users, Bot, ShieldAlert, AlertTriangle } from 'lucide-react';
 import type { Subject } from '@/types/rbac';
@@ -22,7 +23,7 @@ function KindIcon({ subject }: { subject: Subject }) {
   return <User size={11} />;
 }
 
-export function SubjectNode({ data }: NodeProps<SubjectNodeData>) {
+function SubjectNodeImpl({ data }: NodeProps<SubjectNodeData>) {
   const outline =
     data.severity === 'admin' || data.severity === 'sensitive'
       ? subjectSeverityColor(data.severity)
@@ -63,3 +64,5 @@ const handleStyle = {
   width: 1,
   height: 1,
 };
+
+export const SubjectNode = memo(SubjectNodeImpl);

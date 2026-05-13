@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Shield, ShieldAlert, Layers } from 'lucide-react';
 import type { Binding, Role } from '@/types/rbac';
@@ -37,7 +38,7 @@ function bindingChips(bindings: Binding[]): string {
   return bindings.length > 1 ? `${label} +${bindings.length - 1}` : label;
 }
 
-export function RoleNode({ data }: NodeProps<RoleNodeData>) {
+function RoleNodeImpl({ data }: NodeProps<RoleNodeData>) {
   const isCluster = data.role.scope === 'ClusterRole';
   const outline = data.adminLike
     ? 'var(--theme-arrow-deny)'
@@ -123,3 +124,5 @@ const handleStyle = {
   width: 1,
   height: 1,
 };
+
+export const RoleNode = memo(RoleNodeImpl);
