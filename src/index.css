@@ -306,6 +306,93 @@ select option {
   background: var(--theme-canvas);
 }
 
+/* flow chart node styling */
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 180px;
+  max-width: 200px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--theme-card-border);
+  background: var(--theme-card-bg);
+  color: var(--theme-text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.flow-node-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--theme-text-secondary);
+}
+
+.flow-node-kind {
+  font-weight: 600;
+}
+
+.flow-node-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-node-sub {
+  font-size: 10px;
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.flow-node-rule-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.flow-node-rule-label {
+  color: var(--theme-text-secondary);
+  min-width: 28px;
+}
+
+.flow-node-rule-val {
+  color: var(--theme-text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 130px;
+}
+
+.flow-node--binding {
+  border-style: dashed;
+}
+
+.flow-chart-canvas .react-flow__edge-path {
+  /* per-edge stroke comes from inline style; reset base override */
+  stroke-width: inherit;
+  opacity: inherit;
+}
+
+.flow-chart-canvas .react-flow__edge-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.flow-chart-canvas .react-flow__edge.selected .react-flow__edge-path,
+.flow-chart-canvas .react-flow__edge:hover .react-flow__edge-path {
+  filter: brightness(1.2);
+}
+
 /* table styling */
 table.rbac-table {
   width: 100%;
