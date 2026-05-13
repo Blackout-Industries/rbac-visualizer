@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Network, Search, Shield, Hammer } from 'lucide-react';
+import { Network, Search, Shield, Hammer, Workflow } from 'lucide-react';
 import { RbacProvider } from '@/state/context';
 import { GraphView } from '@/components/GraphView';
 import { ReverseQuery } from '@/components/ReverseQuery';
@@ -8,8 +8,9 @@ import { SubjectDetail } from '@/components/SubjectDetail';
 import { YamlInputPanel } from '@/components/YamlInputPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { BuilderTab } from '@/components/builder/BuilderTab';
+import { FlowChart } from '@/components/FlowChart';
 
-type Tab = 'graph' | 'reverse' | 'build';
+type Tab = 'graph' | 'flow' | 'reverse' | 'build';
 
 declare const __APP_VERSION__: string;
 
@@ -27,7 +28,7 @@ function AppShell() {
   const [draggingDivider, setDraggingDivider] = useState(false);
 
   const showYamlInputPanel = tab !== 'build';
-  const showFilters = tab !== 'build';
+  const showFilters = tab !== 'build' && tab !== 'flow';
 
   return (
     <div
@@ -48,6 +49,9 @@ function AppShell() {
         <nav className="flex items-center gap-1">
           <TabButton active={tab === 'graph'} onClick={() => setTab('graph')}>
             <Network size={14} /> Graph
+          </TabButton>
+          <TabButton active={tab === 'flow'} onClick={() => setTab('flow')}>
+            <Workflow size={14} /> Flow
           </TabButton>
           <TabButton active={tab === 'reverse'} onClick={() => setTab('reverse')}>
             <Search size={14} /> Reverse query
@@ -74,12 +78,14 @@ function AppShell() {
           >
             {tab === 'graph' ? (
               <GraphView />
+            ) : tab === 'flow' ? (
+              <FlowChart />
             ) : tab === 'reverse' ? (
               <ReverseQuery />
             ) : (
               <BuilderTab />
             )}
-            {tab !== 'build' && <SubjectDetail />}
+            {tab !== 'build' && tab !== 'flow' && <SubjectDetail />}
           </section>
           {showYamlInputPanel && (
             <>
