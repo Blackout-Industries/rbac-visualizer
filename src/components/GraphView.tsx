@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import ReactFlow, {
   Background,
   Controls,
+  MarkerType,
   MiniMap,
   type Edge,
   type Node,
@@ -180,7 +181,19 @@ export function GraphView() {
           id: `${r.id}->${id}`,
           source: r.id,
           target: id,
-          style: { stroke: 'var(--theme-arrow-allow)', opacity: 0.5 },
+          type: 'smoothstep',
+          pathOptions: { borderRadius: 12 },
+          style: {
+            stroke: 'var(--theme-arrow-allow)',
+            strokeWidth: 1.5,
+            opacity: 0.55,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: 'var(--theme-arrow-allow)',
+            width: 12,
+            height: 12,
+          },
         });
       }
     }
@@ -200,9 +213,21 @@ export function GraphView() {
           id: `${s.id}-${b.id}->${role.id}`,
           source: s.id,
           target: role.id,
+          type: 'smoothstep',
+          pathOptions: { borderRadius: 12 },
           label: b.scope === 'ClusterRoleBinding' ? 'CRB' : `RB·${b.namespace}`,
           labelStyle: { fontSize: 9, fill: 'var(--theme-text-secondary)' },
-          style: { stroke: 'var(--theme-accent)', opacity: 0.5 },
+          style: {
+            stroke: 'var(--theme-accent)',
+            strokeWidth: 1.5,
+            opacity: 0.55,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: 'var(--theme-accent)',
+            width: 12,
+            height: 12,
+          },
         });
       }
     }
