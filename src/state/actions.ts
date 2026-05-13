@@ -35,7 +35,14 @@ export type RbacAction =
   | { type: 'DELETE_SA'; payload: { id: string } }
   | { type: 'APPLY_TEMPLATE'; payload: { roles: Role[]; bindings: Binding[]; serviceAccounts: ServiceAccountObj[] } }
   | { type: 'SELECT_RESOURCE'; payload: { id: string | null } }
-  | { type: 'SNAPSHOT_BASELINE' };
+  | { type: 'SNAPSHOT_BASELINE' }
+  // ──────────── workspace tab actions ────────────
+  | { type: 'ADD_TAB' }
+  | { type: 'REMOVE_TAB'; payload: { id: string } }
+  | { type: 'RENAME_TAB'; payload: { id: string; name: string } }
+  | { type: 'SWITCH_TAB'; payload: { id: string } }
+  | { type: 'DUPLICATE_TAB'; payload: { id: string } }
+  | { type: 'CLOSE_OTHER_TABS'; payload: { id: string } };
 
 export const setYaml = (yaml: string): RbacAction => ({ type: 'SET_YAML', payload: { yaml } });
 export const setGraph = (
@@ -105,3 +112,21 @@ export const selectResource = (id: string | null): RbacAction => ({
 });
 
 export const snapshotBaseline = (): RbacAction => ({ type: 'SNAPSHOT_BASELINE' });
+
+/* ──────── tab management ──────── */
+
+export const addTab = (): RbacAction => ({ type: 'ADD_TAB' });
+export const removeTab = (id: string): RbacAction => ({ type: 'REMOVE_TAB', payload: { id } });
+export const renameTab = (id: string, name: string): RbacAction => ({
+  type: 'RENAME_TAB',
+  payload: { id, name },
+});
+export const switchTab = (id: string): RbacAction => ({ type: 'SWITCH_TAB', payload: { id } });
+export const duplicateTab = (id: string): RbacAction => ({
+  type: 'DUPLICATE_TAB',
+  payload: { id },
+});
+export const closeOtherTabs = (id: string): RbacAction => ({
+  type: 'CLOSE_OTHER_TABS',
+  payload: { id },
+});

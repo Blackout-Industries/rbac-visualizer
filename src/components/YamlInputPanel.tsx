@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Download, Upload, FileText, Eraser } from 'lucide-react';
-import { useRbacContext } from '@/state/context';
+import { useRbacContext, useTabsContext } from '@/state/context';
 import { setGraph, setYaml } from '@/state/actions';
 import { parseRbacYaml, RbacParseError } from '@/lib/rbac-parser';
 
@@ -36,6 +36,7 @@ roleRef:
 
 export function YamlInputPanel() {
   const { state, dispatch } = useRbacContext();
+  const { activeTabId } = useTabsContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reparse = useCallback(
@@ -56,11 +57,25 @@ export function YamlInputPanel() {
     [dispatch],
   );
 
-  // Reparse whenever yaml changes (debounced via microtask).
+  // Track the last yaml we reparsed *per tab*. Switching tabs or hydrating from
+  // localStorage must not retrigger a parse (that would clobber baseline + selection).
+  // Only an actual textarea edit in the active tab should reparse.
+  const lastParsedRef = useRef<Map<string, string>>(new Map());
   useEffect(() => {
-    const id = window.setTimeout(() => reparse(state.yaml), 200);
+    const prev = lastParsedRef.current.get(activeTabId);
+    if (prev === state.yaml) return;
+    // First time we see this tab during this session — seed the cache without parsing
+    // if the tab already has a graph or parse error (it came from localStorage).
+    if (prev === undefined && (state.graph !== null || state.parseError !== null)) {
+      lastParsedRef.current.set(activeTabId, state.yaml);
+      return;
+    }
+    const id = window.setTimeout(() => {
+      lastParsedRef.current.set(activeTabId, state.yaml);
+      reparse(state.yaml);
+    }, 200);
     return () => window.clearTimeout(id);
-  }, [state.yaml, reparse]);
+  }, [state.yaml, state.graph, state.parseError, activeTabId, reparse]);
 
   const onFile = useCallback(
     (file: File) => {
