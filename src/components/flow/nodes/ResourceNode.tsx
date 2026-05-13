@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { Box, Asterisk } from 'lucide-react';
 
@@ -17,7 +18,7 @@ const SENSITIVE_HINTS = [
   'nodes',
 ];
 
-export function ResourceNode({ data }: NodeProps<ResourceNodeData>) {
+function ResourceNodeImpl({ data }: NodeProps<ResourceNodeData>) {
   const isWildcard = data.resource === '*';
   const outline = isWildcard || data.sensitive
     ? 'var(--theme-arrow-deny)'
@@ -53,3 +54,5 @@ const handleStyle = {
   width: 1,
   height: 1,
 };
+
+export const ResourceNode = memo(ResourceNodeImpl);
