@@ -1,11 +1,17 @@
-// Pure transformation: RbacGraph → 5-layer DAG model for the Flow Chart view.
+// Pure transformation: RbacGraph → 3-layer compact DAG for the Flow Chart view.
 //
-// Layers (left to right): subject → binding → role → rule → resource
+// Layers (left to right): subject → role → resource
 //
-// A "rule node" corresponds to one PolicyRule on one role (post-aggregation).
-// A "resource node" is a distinct (apiGroup, resource) tuple that was actually
-// granted by some rule. Wildcards are represented as the literal "*" token —
-// we do NOT expand them into every existing resource type.
+// Compared to the v1 5-layer model (subject → binding → role → rule → resource),
+// this folds two layers away from the canvas:
+//   * Bindings are no longer their own nodes; the binding label rides on the
+//     subject→role edge ("CRB" or "RB ns/<ns>"), and a role card carries the
+//     list of bindings that landed subjects on it.
+//   * Rules are no longer their own nodes; a role card lists its rules inline
+//     as small rows (apiGroup / resources / verbs, severity-coloured).
+//
+// A "resource node" is still a distinct (apiGroup, resource) tuple actually
+// granted by some rule on a reachable role. Wildcards stay as literal "*".
 
 import type {
   Binding,
@@ -24,7 +30,7 @@ import {
   type VerbSeverity,
 } from './severity';
 
-export type FlowLayer = 'subject' | 'binding' | 'role' | 'rule' | 'resource';
+export type FlowLayer = 'subject' | 'role' | 'resource';
 
 export interface FlowSubjectNode {
   layer: 'subject';
@@ -33,24 +39,24 @@ export interface FlowSubjectNode {
   severity: SubjectSeverity;
 }
 
-export interface FlowBindingNode {
-  layer: 'binding';
-  id: string;
-  binding: Binding;
+/** A single rule on a role, packed for inline rendering inside the role card. */
+export interface RoleRuleEntry {
+  ruleIndex: number;
+  rule: PolicyRule;
+  severity: RuleSeverity;
+  /** Worst-case verb severity for the rule, drives the row colour. */
+  verbSeverity: VerbSeverity;
 }
 
 export interface FlowRoleNode {
   layer: 'role';
   id: string;
   role: Role;
-}
-
-export interface FlowRuleNode {
-  layer: 'rule';
-  id: string;
-  role: Role;
-  rule: PolicyRule;
-  ruleIndex: number;
+  /** Bindings whose subjects reach this role. Used for the binding chip on the role header. */
+  bindings: Binding[];
+  /** Inline rules for the compound card. */
+  rules: RoleRuleEntry[];
+  /** Worst-case rule severity across the card. */
   severity: RuleSeverity;
 }
 
@@ -61,34 +67,27 @@ export interface FlowResourceNode {
   resource: string;
 }
 
-export type FlowNode =
-  | FlowSubjectNode
-  | FlowBindingNode
-  | FlowRoleNode
-  | FlowRuleNode
-  | FlowResourceNode;
+export type FlowNode = FlowSubjectNode | FlowRoleNode | FlowResourceNode;
 
-export type FlowEdgeKind =
-  | 'subject-binding'
-  | 'binding-role'
-  | 'role-rule'
-  | 'rule-resource';
+export type FlowEdgeKind = 'subject-role' | 'role-resource';
 
 export interface FlowEdge {
   id: string;
   source: string;
   target: string;
   kind: FlowEdgeKind;
-  /** For rule→resource edges: the verbs that this rule grants on this resource. */
+  /** For subject→role edges: the bindings that link this subject to this role. */
+  bindings?: Binding[];
+  /** For role→resource edges: the union of verbs across all rules on the role that target this resource. */
   verbs?: string[];
   verbSeverity?: VerbSeverity;
-  /** Concatenated chain info for popovers. */
+  /** Concatenated chain info for popovers (role→resource only). */
   chain?: {
-    subjects: Subject[]; // subjects that reach this edge (only filled for rule-resource)
+    subjects: Subject[];
     role: Role;
-    rule: PolicyRule;
+    rules: PolicyRule[];
     bindings: Binding[];
-    namespace?: string;
+    namespaces: string[];
   };
 }
 
@@ -97,12 +96,11 @@ export interface FlowGraph {
   edges: FlowEdge[];
   /** Per-node: ids on the same connected chain. Used by hover spotlight. */
   chains: Map<string, Set<string>>;
-  /** Subjects ordered. */
   subjects: Subject[];
-  /** Roles in play. */
   roles: Role[];
-  /** Total resource nodes. */
   resources: FlowResourceNode[];
+  /** Number of effective rules drawn across all role cards — used for the sidebar stat. */
+  ruleCount: number;
 }
 
 const RESOURCE_WILDCARD = '*';
@@ -110,10 +108,6 @@ const RESOURCE_WILDCARD = '*';
 function resourceNodeId(apiGroup: string, resource: string): string {
   const g = apiGroup === '' ? 'core' : apiGroup;
   return `res::${g}::${resource}`;
-}
-
-function ruleNodeId(role: Role, ruleIndex: number): string {
-  return `rule::${role.id}::${ruleIndex}`;
 }
 
 function bindingResolvesToRole(binding: Binding, graph: RbacGraph): Role | undefined {
@@ -128,8 +122,24 @@ function bindingResolvesToRole(binding: Binding, graph: RbacGraph): Role | undef
   );
 }
 
+function worstRuleSeverity(rules: RoleRuleEntry[]): RuleSeverity {
+  let worst: RuleSeverity = 'safe';
+  for (const r of rules) {
+    if (r.severity === 'wildcard') return 'wildcard';
+    if (r.severity === 'destroy') worst = 'destroy';
+    else if (r.severity === 'mutate' && worst !== 'destroy') worst = 'mutate';
+  }
+  return worst;
+}
+
+function mergeVerbs(a: string[], b: string[]): string[] {
+  const set = new Set<string>(a);
+  for (const v of b) set.add(v);
+  return Array.from(set);
+}
+
 /**
- * Build the layered DAG model from the parsed RbacGraph.
+ * Build the compact 3-layer DAG model from the parsed RbacGraph.
  *
  * Only reachable nodes are emitted: a role appears only if some binding points
  * at it AND the binding has at least one subject; resources appear only if some
@@ -137,32 +147,51 @@ function bindingResolvesToRole(binding: Binding, graph: RbacGraph): Role | undef
  */
 export function buildFlowGraph(graph: RbacGraph): FlowGraph {
   const subjectMap = new Map<string, FlowSubjectNode>();
-  const bindingMap = new Map<string, FlowBindingNode>();
   const roleMap = new Map<string, FlowRoleNode>();
-  const ruleMap = new Map<string, FlowRuleNode>();
   const resourceMap = new Map<string, FlowResourceNode>();
-  const edges: FlowEdge[] = [];
-  const edgeKey = new Set<string>();
 
-  function addEdge(e: FlowEdge) {
-    if (edgeKey.has(e.id)) return;
-    edgeKey.add(e.id);
-    edges.push(e);
-  }
+  // Edges are keyed by (source,target) so we can fold duplicate edges
+  // (same subject reached via multiple bindings, same resource via multiple rules).
+  const subjectRoleEdges = new Map<string, FlowEdge>();
+  const roleResourceEdges = new Map<string, FlowEdge>();
+
+  let ruleCount = 0;
 
   for (const binding of graph.bindings) {
     const role = bindingResolvesToRole(binding, graph);
     if (!role) continue;
     if (binding.subjects.length === 0) continue;
 
-    if (!bindingMap.has(binding.id)) {
-      bindingMap.set(binding.id, { layer: 'binding', id: binding.id, binding });
-    }
+    // Materialise the role node (once) — with its rules + binding list.
     if (!roleMap.has(role.id)) {
-      roleMap.set(role.id, { layer: 'role', id: role.id, role });
+      const effective = effectiveRules(role, graph);
+      const ruleEntries: RoleRuleEntry[] = effective.map((rule, ruleIndex) => {
+        const verbSev = (rule.verbs ?? []).includes(RESOURCE_WILDCARD)
+          ? 'wildcard'
+          : verbsSeverity(rule.verbs);
+        return {
+          ruleIndex,
+          rule,
+          severity: ruleSeverity(rule),
+          verbSeverity: verbSev,
+        };
+      });
+      ruleCount += ruleEntries.length;
+      roleMap.set(role.id, {
+        layer: 'role',
+        id: role.id,
+        role,
+        bindings: [],
+        rules: ruleEntries,
+        severity: worstRuleSeverity(ruleEntries),
+      });
+    }
+    const roleNode = roleMap.get(role.id)!;
+    if (!roleNode.bindings.some(b => b.id === binding.id)) {
+      roleNode.bindings.push(binding);
     }
 
-    // subjects → binding
+    // Subjects → role.
     for (const subj of binding.subjects) {
       if (!subjectMap.has(subj.id)) {
         subjectMap.set(subj.id, {
@@ -172,50 +201,36 @@ export function buildFlowGraph(graph: RbacGraph): FlowGraph {
           severity: subjectSeverity(subj, graph),
         });
       }
-      addEdge({
-        id: `e::${subj.id}->${binding.id}`,
-        source: subj.id,
-        target: binding.id,
-        kind: 'subject-binding',
-      });
-    }
-
-    // binding → role
-    addEdge({
-      id: `e::${binding.id}->${role.id}`,
-      source: binding.id,
-      target: role.id,
-      kind: 'binding-role',
-    });
-
-    // role → rule(s) → resource(s)
-    const rules = effectiveRules(role, graph);
-    rules.forEach((rule, ruleIndex) => {
-      const rId = ruleNodeId(role, ruleIndex);
-      if (!ruleMap.has(rId)) {
-        ruleMap.set(rId, {
-          layer: 'rule',
-          id: rId,
-          role,
-          rule,
-          ruleIndex,
-          severity: ruleSeverity(rule),
+      const edgeKey = `e::${subj.id}->${role.id}`;
+      const existing = subjectRoleEdges.get(edgeKey);
+      if (existing) {
+        if (!existing.bindings?.some(b => b.id === binding.id)) {
+          existing.bindings = [...(existing.bindings ?? []), binding];
+        }
+      } else {
+        subjectRoleEdges.set(edgeKey, {
+          id: edgeKey,
+          source: subj.id,
+          target: role.id,
+          kind: 'subject-role',
+          bindings: [binding],
         });
       }
-      addEdge({
-        id: `e::${role.id}->${rId}`,
-        source: role.id,
-        target: rId,
-        kind: 'role-rule',
-      });
+    }
 
+    // Role → resources (fan-out across every rule, merging verbs per resource).
+    const effective = effectiveRules(role, graph);
+    for (const rule of effective) {
       const apiGroups = rule.apiGroups && rule.apiGroups.length > 0 ? rule.apiGroups : [''];
       const resources = rule.resources && rule.resources.length > 0
         ? rule.resources
         : rule.nonResourceURLs && rule.nonResourceURLs.length > 0
           ? rule.nonResourceURLs.map(u => `url:${u}`)
           : [];
-      if (resources.length === 0) return;
+      if (resources.length === 0) continue;
+
+      const verbs = rule.verbs ?? [];
+      const verbSev = verbs.includes(RESOURCE_WILDCARD) ? 'wildcard' : verbsSeverity(verbs);
 
       for (const apiGroup of apiGroups) {
         for (const resource of resources) {
@@ -228,35 +243,59 @@ export function buildFlowGraph(graph: RbacGraph): FlowGraph {
               resource,
             });
           }
-          const verbs = rule.verbs ?? [];
-          addEdge({
-            id: `e::${rId}->${resKey}`,
-            source: rId,
-            target: resKey,
-            kind: 'rule-resource',
-            verbs,
-            verbSeverity:
-              verbs.includes(RESOURCE_WILDCARD) ? 'wildcard' : verbsSeverity(verbs),
-            chain: {
-              subjects: binding.subjects,
-              role,
-              rule,
-              bindings: [binding],
-              namespace:
-                binding.scope === 'ClusterRoleBinding' ? undefined : binding.namespace,
-            },
-          });
+          const edgeKey = `e::${role.id}->${resKey}`;
+          const existing = roleResourceEdges.get(edgeKey);
+          if (existing) {
+            existing.verbs = mergeVerbs(existing.verbs ?? [], verbs);
+            existing.verbSeverity = existing.verbs.includes(RESOURCE_WILDCARD)
+              ? 'wildcard'
+              : verbsSeverity(existing.verbs);
+            if (existing.chain) {
+              if (!existing.chain.rules.includes(rule)) existing.chain.rules.push(rule);
+              if (!existing.chain.bindings.some(b => b.id === binding.id)) {
+                existing.chain.bindings.push(binding);
+              }
+              const ns =
+                binding.scope === 'ClusterRoleBinding' ? 'cluster' : (binding.namespace ?? 'cluster');
+              if (!existing.chain.namespaces.includes(ns)) existing.chain.namespaces.push(ns);
+              for (const s of binding.subjects) {
+                if (!existing.chain.subjects.some(x => x.id === s.id)) {
+                  existing.chain.subjects.push(s);
+                }
+              }
+            }
+          } else {
+            const ns =
+              binding.scope === 'ClusterRoleBinding' ? 'cluster' : (binding.namespace ?? 'cluster');
+            roleResourceEdges.set(edgeKey, {
+              id: edgeKey,
+              source: role.id,
+              target: resKey,
+              kind: 'role-resource',
+              verbs,
+              verbSeverity: verbSev,
+              chain: {
+                subjects: [...binding.subjects],
+                role,
+                rules: [rule],
+                bindings: [binding],
+                namespaces: [ns],
+              },
+            });
+          }
         }
       }
-    });
+    }
   }
 
   const nodes: FlowNode[] = [
     ...subjectMap.values(),
-    ...bindingMap.values(),
     ...roleMap.values(),
-    ...ruleMap.values(),
     ...resourceMap.values(),
+  ];
+  const edges: FlowEdge[] = [
+    ...subjectRoleEdges.values(),
+    ...roleResourceEdges.values(),
   ];
 
   const chains = computeChains(nodes, edges);
@@ -268,6 +307,7 @@ export function buildFlowGraph(graph: RbacGraph): FlowGraph {
     subjects: Array.from(subjectMap.values()).map(s => s.subject),
     roles: Array.from(roleMap.values()).map(r => r.role),
     resources: Array.from(resourceMap.values()),
+    ruleCount,
   };
 }
 
@@ -305,19 +345,50 @@ function computeChains(nodes: FlowNode[], edges: FlowEdge[]): Map<string, Set<st
 
 /** Plain-text grant-chain summary used by edge-click popovers. */
 export function describeEdgeChain(edge: FlowEdge): string {
-  if (edge.kind !== 'rule-resource' || !edge.chain) return '';
-  const c = edge.chain;
-  const subs = c.subjects.map(s => s.id).join(', ');
-  const verbs = (edge.verbs ?? []).join(', ');
-  const apiGroup = c.rule.apiGroups?.join(', ') ?? '';
-  const resources = c.rule.resources?.join(', ') ?? '';
-  const ns = c.namespace ? `ns ${c.namespace}` : 'cluster-wide';
-  return [
-    `subjects: ${subs || '(none)'}`,
-    `role: ${c.role.scope}/${c.role.namespace ? c.role.namespace + '/' : ''}${c.role.name}`,
-    `apiGroups: [${apiGroup}]`,
-    `resources: [${resources}]`,
-    `verbs: [${verbs}]`,
-    `scope: ${ns}`,
-  ].join('\n');
+  if (edge.kind === 'role-resource' && edge.chain) {
+    const c = edge.chain;
+    const subs = c.subjects.map(s => s.id).join(', ');
+    const verbs = (edge.verbs ?? []).join(', ');
+    const ruleSummaries = c.rules
+      .map(
+        r =>
+          `  - apiGroups:[${(r.apiGroups ?? []).join(', ')}] resources:[${(r.resources ?? []).join(', ')}] verbs:[${(r.verbs ?? []).join(', ')}]`,
+      )
+      .join('\n');
+    const bindings = c.bindings.map(b => `${b.scope}/${b.namespace ? b.namespace + '/' : ''}${b.name}`).join(', ');
+    return [
+      `subjects: ${subs || '(none)'}`,
+      `role: ${c.role.scope}/${c.role.namespace ? c.role.namespace + '/' : ''}${c.role.name}`,
+      `bindings: ${bindings || '(none)'}`,
+      `scope: ${c.namespaces.join(', ') || 'cluster'}`,
+      `verbs: [${verbs}]`,
+      `rules:\n${ruleSummaries}`,
+    ].join('\n');
+  }
+  if (edge.kind === 'subject-role' && edge.bindings && edge.bindings.length > 0) {
+    const lines = edge.bindings.map(b => {
+      const scope = b.scope === 'ClusterRoleBinding' ? 'cluster' : `ns ${b.namespace}`;
+      return `  - ${b.scope}/${b.name} (${scope})`;
+    });
+    return ['bindings:', ...lines].join('\n');
+  }
+  return '';
+}
+
+/** Short edge label for a subject→role link — picks the most specific binding. */
+export function summariseBindings(bindings: Binding[] | undefined): string {
+  if (!bindings || bindings.length === 0) return '';
+  if (bindings.length === 1) {
+    const b = bindings[0];
+    if (!b) return '';
+    if (b.scope === 'ClusterRoleBinding') return 'CRB';
+    return `RB ${b.namespace ?? ''}`.trim();
+  }
+  // Multiple bindings — count and abbreviate.
+  const crb = bindings.filter(b => b.scope === 'ClusterRoleBinding').length;
+  const rb = bindings.length - crb;
+  const parts: string[] = [];
+  if (crb > 0) parts.push(`${crb} CRB`);
+  if (rb > 0) parts.push(`${rb} RB`);
+  return parts.join(' · ');
 }

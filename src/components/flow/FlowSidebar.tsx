@@ -66,7 +66,7 @@ export function FlowSidebar({
 }: FlowSidebarProps) {
   const subjectCount = flow.subjects.length;
   const roleCount = flow.roles.length;
-  const ruleCount = flow.nodes.filter(n => n.layer === 'rule').length;
+  const ruleCount = flow.ruleCount;
   const resourceCount = flow.resources.length;
 
   const adminSubjects = useMemo(() => findAdminSubjects(flow, graph), [flow, graph]);

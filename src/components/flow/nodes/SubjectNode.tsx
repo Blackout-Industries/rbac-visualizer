@@ -11,16 +11,15 @@ export interface SubjectNodeData {
 }
 
 function kindColor(subject: Subject): string {
-  // ServiceAccount: teal; User: mauve (accent); Group: a different accent
   if (subject.kind === 'ServiceAccount') return 'var(--theme-arrow-allow)';
   if (subject.kind === 'Group') return 'var(--theme-rating-3)';
   return 'var(--theme-accent)';
 }
 
 function KindIcon({ subject }: { subject: Subject }) {
-  if (subject.kind === 'ServiceAccount') return <Bot size={12} />;
-  if (subject.kind === 'Group') return <Users size={12} />;
-  return <User size={12} />;
+  if (subject.kind === 'ServiceAccount') return <Bot size={11} />;
+  if (subject.kind === 'Group') return <Users size={11} />;
+  return <User size={11} />;
 }
 
 export function SubjectNode({ data }: NodeProps<SubjectNodeData>) {
@@ -33,23 +32,25 @@ export function SubjectNode({ data }: NodeProps<SubjectNodeData>) {
 
   return (
     <div
-      className="flow-node"
+      className="flow-subject-card"
       style={{
-        opacity: data.dim ? 0.15 : 1,
+        opacity: data.dim ? 0.18 : 1,
         borderColor: outline,
         boxShadow: data.selected ? `0 0 0 2px ${outline}` : undefined,
       }}
     >
       <Handle type="target" position={Position.Left} style={handleStyle} />
-      <div className="flow-node-header" style={{ color: outline }}>
+      <div className="flow-subject-card__head" style={{ color: outline }}>
         <KindIcon subject={data.subject} />
-        <span className="flow-node-kind">{data.subject.kind.toLowerCase()}</span>
-        {showSkull && <ShieldAlert size={12} className="ml-auto" />}
-        {showWarn && <AlertTriangle size={12} className="ml-auto" />}
+        <span className="flow-subject-card__kind">{data.subject.kind.toLowerCase()}</span>
+        {showSkull && <ShieldAlert size={11} className="ml-auto" />}
+        {showWarn && !showSkull && <AlertTriangle size={11} className="ml-auto" />}
       </div>
-      <div className="flow-node-name">{data.subject.name}</div>
+      <div className="flow-subject-card__name" title={data.subject.name}>
+        {data.subject.name}
+      </div>
       {data.subject.namespace && data.subject.kind === 'ServiceAccount' && (
-        <div className="flow-node-sub">ns · {data.subject.namespace}</div>
+        <div className="flow-subject-card__sub">ns · {data.subject.namespace}</div>
       )}
       <Handle type="source" position={Position.Right} style={handleStyle} />
     </div>
