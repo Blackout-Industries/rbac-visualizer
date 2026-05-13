@@ -8,19 +8,20 @@ import type {
 } from '@/types/rbac';
 import { makeSubject } from '@/lib/rbac-parser';
 import type { RbacAction, RbacUIState } from './actions';
+import {
+  type AppState,
+  type TabState,
+  newAppState,
+  withCloseOthers,
+  withDuplicatedTab,
+  withNewTab,
+  withRemovedTab,
+  withRenamedTab,
+  withSwitchedTab,
+} from './tabs';
 
-export const initialState: RbacUIState = {
-  yaml: '',
-  graph: null,
-  parseError: null,
-  selectedId: null,
-  filter: {
-    namespace: 'all',
-    verbs: new Set<string>(),
-    resource: 'all',
-  },
-  baseline: null,
-};
+/** Initial empty workspace — used when localStorage hydration hasn't run yet. */
+export const initialAppState: AppState = newAppState();
 
 function recomputeDerived(
   roles: Role[],
@@ -88,7 +89,11 @@ function applyIrChange(
   return { ...state, graph, parseError: null };
 }
 
-export function rbacReducer(state: RbacUIState, action: RbacAction): RbacUIState {
+/**
+ * Per-tab reducer — operates on a single workspace slice. Tab management actions
+ * are handled by the outer appReducer; everything else falls through to here.
+ */
+function tabReducer(state: RbacUIState, action: RbacAction): RbacUIState {
   switch (action.type) {
     case 'SET_YAML':
       return { ...state, yaml: action.payload.yaml };
@@ -212,3 +217,43 @@ export function rbacReducer(state: RbacUIState, action: RbacAction): RbacUIState
       return state;
   }
 }
+
+/**
+ * Walk an action into the active tab. Returns a new tabs array if the active tab
+ * changed; otherwise returns the input unchanged.
+ */
+function reduceActiveTab(state: AppState, action: RbacAction): AppState {
+  const activeIdx = state.tabs.findIndex(t => t.id === state.activeTabId);
+  if (activeIdx < 0) return state;
+  const active = state.tabs[activeIdx];
+  if (!active) return state;
+  const nextSlice = tabReducer(active, action);
+  if (nextSlice === active) return state;
+  const tabs = state.tabs.slice();
+  tabs[activeIdx] = { ...active, ...nextSlice, id: active.id, name: active.name };
+  return { ...state, tabs };
+}
+
+export function appReducer(state: AppState, action: RbacAction): AppState {
+  switch (action.type) {
+    case 'ADD_TAB':
+      return withNewTab(state);
+    case 'REMOVE_TAB':
+      return withRemovedTab(state, action.payload.id);
+    case 'RENAME_TAB': {
+      const trimmed = action.payload.name.trim();
+      if (!trimmed) return state;
+      return withRenamedTab(state, action.payload.id, trimmed);
+    }
+    case 'SWITCH_TAB':
+      return withSwitchedTab(state, action.payload.id);
+    case 'DUPLICATE_TAB':
+      return withDuplicatedTab(state, action.payload.id);
+    case 'CLOSE_OTHER_TABS':
+      return withCloseOthers(state, action.payload.id);
+    default:
+      return reduceActiveTab(state, action);
+  }
+}
+
+export type { TabState };
